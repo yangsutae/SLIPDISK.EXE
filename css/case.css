@@ -1,0 +1,284 @@
+/* 무대와 디스크 케이스: 1080x1080 좌표계, 케이스 본체·셔터·라벨·가운데 창·자기 원판 */
+
+:root {
+  --stage-bg: #0c0d10;
+  --case-base: #353840;
+  --case-dark: #282b32;
+  --case-deep: #1e2026;
+  --case-hi: #555a66;
+  --recess-bg: #272a31;
+  --cavity-bg: #121317;
+  --disc-base: #1a1b20;
+  --mono: "Consolas", "Cascadia Mono", "Lucida Console", "Courier New", monospace;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  background: radial-gradient(circle at 50% 45%, #171920 0%, #0b0c0f 75%);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* 1080x1080 기준 좌표계, 창 크기에 맞춰 비율 유지 스케일 */
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: 1080px;
+  height: 1080px;
+}
+.stage > * { position: absolute; }
+
+/* =====================================================================
+   1. 플로피 디스크 본체 (SVG 정밀 성형 + SVG 필터 기반 양각/음각)
+   ===================================================================== */
+.disk-svg {
+  inset: 0;
+  width: 1080px;
+  height: 1080px;
+  overflow: visible;
+}
+
+/* =====================================================================
+   2. 상단 금속 셔터 오목 트랙 (음각: 안쪽으로 파인 슬라이드 홈)
+   ===================================================================== */
+.shutter-recess {
+  left: 156px;
+  top: 48px;
+  width: 684px;
+  height: 248px;
+  border-radius: 4px 4px 24px 24px;
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0 88px,
+      rgba(0, 0, 0, .28) 88px 91px,
+      rgba(255, 255, 255, .05) 91px 93px,
+      transparent 93px 172px,
+      rgba(0, 0, 0, .28) 172px 175px,
+      rgba(255, 255, 255, .05) 175px 177px,
+      transparent 177px
+    ),
+    linear-gradient(180deg, #252830 0%, #2b2e37 100%);
+  box-shadow:
+    inset 5px 6px 10px rgba(0, 0, 0, .68),
+    inset 2px 2px 2px rgba(0, 0, 0, .55),
+    inset -1px -1px 1px rgba(255, 255, 255, .06),
+    -1.5px -1.5px 0 #1b1d23,
+    1.5px 2.5px 0 #4d525e,
+    0 3px 0 #494e5a;
+}
+
+/* =====================================================================
+   3. 브러시드 메탈 셔터 (양각: 오목 트랙 위에 얹힌 금속 슬라이더)
+   ===================================================================== */
+.shutter {
+  left: 296px;
+  top: 42px;
+  width: 530px;
+  height: 244px;
+  border-radius: 6px 6px 22px 22px;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, .08) 0 1px,
+      transparent 1px 2px,
+      rgba(0, 0, 0, .05) 2px 3px
+    ),
+    linear-gradient(
+      106deg,
+      #9ea3ad 0%,
+      #c8cdd6 18%,
+      #eef0f4 36%,
+      #ffffff 43%,
+      #d5d9e0 52%,
+      #adb2bc 68%,
+      #d4d8df 82%,
+      #9499a3 100%
+    );
+  box-shadow:
+    inset 2.5px 2.5px 0 rgba(255, 255, 255, .92),
+    inset 4px 4px 3px rgba(255, 255, 255, .45),
+    inset -2.5px -3px 0 #7b808a,
+    inset -4px -5px 4px rgba(0, 0, 0, .25),
+    0 0 0 2px #14161d,
+    -6px 8px 14px rgba(0, 0, 0, .62),
+    -2px 3px 4px rgba(0, 0, 0, .5);
+}
+
+.shutter::before {
+  content: "";
+  position: absolute;
+  left: 54px;
+  top: 0;
+  width: 38px;
+  height: 13px;
+  background: #14161c;
+  border-radius: 0 0 5px 5px;
+  box-shadow:
+    inset 2px 2px 4px rgba(0, 0, 0, .85),
+    -1px 0 0 rgba(0, 0, 0, .5),
+    1px 2px 0 rgba(255, 255, 255, .85);
+}
+
+.shutter-window {
+  position: absolute;
+  left: 336px;
+  top: 32px;
+  width: 130px;
+  height: 186px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #23252c 0%, #2e3038 100%);
+  box-shadow:
+    inset 4px 5px 9px rgba(0, 0, 0, .82),
+    inset 2px 2px 0 #14161c,
+    0 0 0 2px #161820,
+    -2px -2px 1px rgba(60, 64, 72, .65),
+    2.5px 2.5px 0 #f6f7fa,
+    3.5px 3.5px 2px rgba(255, 255, 255, .6);
+}
+
+/* =====================================================================
+   4. 라벨 스티커 (양각: 셔터 왼쪽에 부착된 매트 종이 스티커)
+   ===================================================================== */
+.label {
+  position: absolute;
+  left: 20px;
+  top: 32px;
+  width: 294px;
+  height: 186px;
+  border-radius: 11px;
+  background:
+    linear-gradient(
+      180deg,
+      #e8e4d8 0 14px,
+      #d5d0c3 14px 16px,
+      #faf8f2 16px,
+      #f3f0e6 100%
+    );
+  box-shadow:
+    inset 1.5px 1.5px 0 #ffffff,
+    inset -1px -1.5px 0 #d8d4c8,
+    0 2px 5px rgba(0, 0, 0, .28),
+    0 0 0 1px rgba(0, 0, 0, .16);
+  padding: 30px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.label h1 {
+  margin: 0;
+  font: 700 33px/1.18 var(--mono);
+  letter-spacing: 0.4px;
+  color: #181a1f;
+  white-space: pre-line;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .7);
+}
+.label h1 small {
+  display: block;
+  margin-top: 6px;
+  font: 700 21px/1.2 "Malgun Gothic", sans-serif;
+  letter-spacing: -0.3px;
+  color: #2c2f36;
+}
+
+/* =====================================================================
+   5. 가운데 인게임 창 (3단 음각 챔퍼 몰딩 + 자기 원판)
+   ===================================================================== */
+.window-frame {
+  left: 114px;
+  top: 334px;
+  width: 852px;
+  height: 612px;
+  border-radius: 52px;
+  padding: 10px;
+  background:
+    conic-gradient(
+      from -45deg at 50% 50%,
+      #3a3e48 0deg,
+      #505562 45deg,
+      #565c6a 135deg,
+      #3a3e48 180deg,
+      #1f222a 225deg,
+      #1b1e25 315deg,
+      #3a3e48 360deg
+    );
+  box-shadow:
+    -2px -2px 3px rgba(0, 0, 0, .55),
+    2px 2px 3px rgba(255, 255, 255, .07),
+    inset 3px 3px 6px rgba(0, 0, 0, .65),
+    inset -3px -3px 6px rgba(255, 255, 255, .12);
+}
+
+.window {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 42px;
+  background: var(--cavity-bg);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 2.5px #0e1015,
+    inset 8px 10px 22px rgba(0, 0, 0, .92),
+    inset -4px -4px 12px rgba(0, 0, 0, .65);
+}
+
+/* =====================================================================
+   6. 자기 원판 (.disc)
+   ===================================================================== */
+.disc {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -53%;
+  width: 820px;
+  height: 820px;
+  border-radius: 50%;
+  background:
+    conic-gradient(
+      from 35deg at 50% 50%,
+      rgba(255, 255, 255, .07) 0deg,
+      transparent 55deg,
+      rgba(0, 0, 0, .38) 90deg,
+      transparent 125deg,
+      rgba(255, 255, 255, .065) 180deg,
+      transparent 235deg,
+      rgba(0, 0, 0, .38) 270deg,
+      transparent 305deg,
+      rgba(255, 255, 255, .07) 360deg
+    ),
+    repeating-radial-gradient(
+      circle,
+      #22242b 0 14px,
+      #2b2d36 14px 15.5px,
+      #111216 15.5px 18px,
+      #23252c 18px 29px,
+      #2c2e37 29px 30.5px,
+      #0f1014 30.5px 33px
+    );
+  box-shadow:
+    inset 2.5px 2.5px 4px rgba(255, 255, 255, .16),
+    inset -2.5px -2.5px 5px rgba(0, 0, 0, .75),
+    0 0 0 5px #08090d,
+    0 0 0 7px #23252d,
+    0 16px 36px rgba(0, 0, 0, .88);
+}
+
+.disc svg {
+  width: 100%;
+  height: 100%;
+}
+
+.window-vignette {
+  position: absolute;
+  inset: 0;
+  border-radius: 42px;
+  pointer-events: none;
+  box-shadow:
+    inset 10px 14px 24px rgba(0, 0, 0, .82),
+    inset 0 2px 3px rgba(0, 0, 0, .75),
+    inset -3px -3px 8px rgba(0, 0, 0, .5);
+}

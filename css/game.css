@@ -1,0 +1,239 @@
+/* 인게임 UI: 레벨 선택, 셔터 창 HUD, 보드·결과 오버레이, 상단바·하단 입력바 */
+
+.label-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 2px solid rgba(154, 150, 140, .45);
+}
+.label-nav button, .label-nav select {
+  font: 700 13px/1 var(--mono), "Malgun Gothic", sans-serif;
+  color: #23262d;
+  background: rgba(213, 208, 195, .65);
+  border: 1px solid rgba(0, 0, 0, .22);
+  border-radius: 5px;
+  padding: 5px 7px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+.label-nav button:hover:not(:disabled), .label-nav select:hover:not(:disabled) {
+  background: rgba(200, 194, 178, .9);
+}
+.label-nav button:disabled, .label-nav select:disabled {
+  opacity: .45;
+  cursor: default;
+}
+.shutter-hud {
+  position: absolute;
+  inset: 0;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font: 700 13px/1.3 "Malgun Gothic", var(--mono), sans-serif;
+  color: #8b93a6;
+}
+.shutter-hud .hud-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  padding-bottom: 4px;
+}
+.shutter-hud .hud-row b {
+  font-family: var(--mono);
+  font-size: 16px;
+  color: #e6e9f2;
+}
+.shutter-hud .hud-row.file b { color: #aeb4be; }
+.shutter-hud .hud-row.virus b { color: #d6336c; }
+.shutter-hud .hud-row.vaccine b { color: #2fbf71; }
+.shutter-hud .hud-row.best b { color: #ffa53d; }
+
+#board {
+  position: absolute;
+  left: 0;
+  top: 28px;
+  width: 832px;
+  height: 466px;
+  z-index: 2;
+  display: block;
+}
+
+.play-overlay {
+  position: absolute;
+  left: 0;
+  top: 28px;
+  width: 832px;
+  height: 466px;
+  z-index: 6;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(12, 13, 17, .82);
+  backdrop-filter: blur(3px);
+  text-align: center;
+  padding: 24px;
+}
+.play-overlay.show { display: flex; }
+.play-overlay h2 {
+  margin: 0;
+  font: 800 28px/1.2 "Malgun Gothic", sans-serif;
+}
+.play-overlay h2.ok { color: #2fbf71; }
+.play-overlay h2.fail { color: #d6336c; }
+.play-overlay p {
+  margin: 0;
+  font: 600 16px/1.45 "Malgun Gothic", sans-serif;
+  color: #d7dce8;
+}
+.play-overlay .ov-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.play-overlay button {
+  font: 700 15px/1 "Malgun Gothic", sans-serif;
+  color: #e6e9f2;
+  background: #2b2e37;
+  border: 1px solid #4d525f;
+  border-radius: 10px;
+  padding: 11px 18px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.15), 0 4px 10px rgba(0,0,0,.5);
+}
+.play-overlay button.primary {
+  background: #2fbf71;
+  color: #101318;
+  border-color: #5ce096;
+}
+.deboss-item.done { opacity: .32; }
+.deboss-item.cur use { fill: #ffa53d; }
+
+/* =====================================================================
+   7. 인게임 상단바 UI (.top-dock) 및 하단 입력바 UI (.input-dock)
+      - .top-dock: canvas#board 위에 .window 상단에 밀착 (외곽 벽 테두리 14px의 2배 두께 = 28px)
+      - .input-dock: .window 하단에 빈틈없이 밀착 (left: 0; right: 0; bottom: 0)
+      - 방향키·커서·RUN 버튼 모두 디스크 좌상단 음각 화살표(svg.disk-svg > path)와
+        동일한 플라스틱 음각 각인(#true-deboss) 방식으로 통일
+   ===================================================================== */
+.top-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 28px;
+  border-radius: 42px 42px 0 0;
+  /* 디스크 케이스 및 .input-dock과 동일한 매트 플라스틱 바디 */
+  background: linear-gradient(180deg, #373b44 0%, #30343c 55%, #2a2d35 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, .2),
+    inset 0 -3px 0 #1b1e24,
+    0 2.5px 0 #0e1015,
+    0 8px 18px rgba(0, 0, 0, .75);
+  z-index: 5;
+}
+
+.input-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 98px;
+  border-radius: 0 0 42px 42px;
+  padding: 13px 20px 15px;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  /* 디스크 케이스와 동일한 매트 플라스틱 바디 */
+  background: linear-gradient(180deg, #373b44 0%, #30343c 55%, #2a2d35 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, .2),
+    inset 0 -3px 0 #1b1e24,
+    0 -2.5px 0 #0e1015,
+    0 -12px 26px rgba(0, 0, 0, .82);
+  z-index: 5;
+}
+
+/* 입력된 현황 표시 공간 (셔터 트랙과 같은 톤의 오목 플라스틱 홈) */
+.queue-well {
+  flex: 1;
+  height: 100%;
+  border-radius: 18px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* 음각 화살표(#22252e + #true-deboss)의 인셋 그림자와 하이라이트 턱이
+     가장 선명하게 살아나는 다크 그레이 매트 플라스틱 바닥 */
+  background: linear-gradient(180deg, #2b2e37 0%, #2f333d 100%);
+  box-shadow:
+    inset 4px 5px 9px rgba(0, 0, 0, .65),
+    inset 2px 2px 2px rgba(0, 0, 0, .5),
+    -1.5px -1.5px 0 #1b1d24,
+    1.5px 2px 0 #4d525f,
+    0 2px 0 #484d59;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.queue-well::-webkit-scrollbar {
+  display: none;
+}
+
+/* 개별 음각 방향 화살표 및 다음 입력 위치(_) SVG 아이템 */
+.deboss-item {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.deboss-cursor {
+  animation: cursor-pulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes cursor-pulse {
+  from { opacity: 1; }
+  to { opacity: .38; }
+}
+
+/* 입력바 오른쪽 끝: 올리기(명령열 실행/전송) 버튼 (.btn-upload)
+   - 현황 슬롯과 동일한 플라스틱 오목 홈 + 내부 음각 각인 아이콘/텍스트 */
+.btn-upload {
+  height: 100%;
+  width: 132px;
+  border: 0;
+  border-radius: 18px;
+  padding: 0 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #2b2e37 0%, #2f333d 100%);
+  box-shadow:
+    inset 4px 5px 9px rgba(0, 0, 0, .65),
+    inset 2px 2px 2px rgba(0, 0, 0, .5),
+    -1.5px -1.5px 0 #1b1d24,
+    1.5px 2px 0 #4d525f,
+    0 2px 0 #484d59;
+  transition: filter .12s ease, box-shadow .08s ease;
+}
+.btn-upload:hover {
+  filter: brightness(1.08);
+}
+.btn-upload:active, .btn-upload.pressed {
+  background: linear-gradient(180deg, #252830 0%, #292c35 100%);
+  box-shadow:
+    inset 6px 7px 12px rgba(0, 0, 0, .82),
+    inset 2px 2px 3px rgba(0, 0, 0, .65),
+    -1.5px -1.5px 0 #181a21,
+    1.5px 2px 0 #4c515e;
+}
+.btn-upload svg {
+  width: 104px;
+  height: 44px;
+  overflow: visible;
+}

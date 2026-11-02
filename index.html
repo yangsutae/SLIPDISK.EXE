@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SLIPDISK.EXE — In-Game Input Bar UI</title>
+<link rel="stylesheet" href="css/case.css">
+<link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+<main class="stage" aria-label="SLIPDISK.EXE 플로피 디스크 무대 및 음각 입력바 UI">
+  <!-- 1. 디스크 케이스 본체 및 진짜 SVG 필터 기반 음각/양각 디테일 -->
+  <svg class="disk-svg" viewBox="0 0 1080 1080" aria-hidden="true">
+    <defs>
+      <linearGradient id="case-body" x1="0.15" y1="0" x2="0.85" y2="1">
+        <stop offset="0" stop-color="#3c4049"/>
+        <stop offset="0.45" stop-color="#33363e"/>
+        <stop offset="1" stop-color="#282b32"/>
+      </linearGradient>
+
+      <filter id="disk-shadow" x="-10%" y="-10%" width="125%" height="125%">
+        <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#000000" flood-opacity="0.72"/>
+        <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.45"/>
+      </filter>
+
+      <!-- 플로피 디스크 좌상단 화살표 및 하단 입력바에서 공통으로 쓰는 진짜 음각(Deboss) 필터 -->
+      <filter id="true-deboss" x="-30%" y="-30%" width="160%" height="160%">
+        <!-- 1) 바깥 하·우측 빛 받는 밝은 플라스틱 턱 -->
+        <feOffset in="SourceAlpha" dx="1.8" dy="2.2" result="hi-off"/>
+        <feFlood flood-color="#575c6a" flood-opacity="0.95" result="hi-col"/>
+        <feComposite in="hi-col" in2="hi-off" operator="in" result="hi-lip"/>
+
+        <!-- 2) 바깥 상·좌측 미세 어두운 림 -->
+        <feOffset in="SourceAlpha" dx="-1.2" dy="-1.2" result="lo-off"/>
+        <feFlood flood-color="#171920" flood-opacity="0.92" result="lo-col"/>
+        <feComposite in="lo-col" in2="lo-off" operator="in" result="lo-rim"/>
+
+        <!-- 3) 도형 내부 상·좌측 깊은 인셋 그림자 -->
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1.8" result="blur"/>
+        <feOffset in="blur" dx="2.5" dy="3" result="off-blur"/>
+        <feComposite in="SourceAlpha" in2="off-blur" operator="out" result="inv-shadow"/>
+        <feFlood flood-color="#0b0d12" flood-opacity="0.88" result="sh-col"/>
+        <feComposite in="sh-col" in2="inv-shadow" operator="in" result="inner-shadow"/>
+
+        <feMerge>
+          <feMergeNode in="lo-rim"/>
+          <feMergeNode in="hi-lip"/>
+          <feMergeNode in="SourceGraphic"/>
+          <feMergeNode in="inner-shadow"/>
+        </feMerge>
+      </filter>
+
+      <filter id="bevel-soft" x="-5%" y="-5%" width="110%" height="110%">
+        <feGaussianBlur stdDeviation="2.5"/>
+      </filter>
+
+      <!-- 입력바 내부 방향키용 블록 화살표 원형 (svg.disk-svg > path와 동일한 비례의 양방향 대칭 폴리곤, 중심 23,23) -->
+      <path id="stamped-arrow"
+        d="M 23 6 L 38 23 H 29 V 40 H 17 V 23 H 8 Z"/>
+
+      <path id="disk-outer"
+        d="M 88 48
+           H 104 V 57 H 130 V 48
+           H 156 V 56 H 840 V 48
+           H 862 V 57 H 888 V 48
+           H 952
+           L 1020 116
+           V 996
+           A 36 36 0 0 1 984 1032
+           H 96
+           A 36 36 0 0 1 60 996
+           V 76
+           A 28 28 0 0 1 88 48 Z"/>
+
+      <path id="disk-inner"
+        d="M 90 55
+           H 99 V 63 H 135 V 55
+           H 151 V 62 H 845 V 55
+           H 857 V 63 H 893 V 55
+           H 949
+           L 1013 119
+           V 994
+           A 30 30 0 0 1 983 1025
+           H 97
+           A 30 30 0 0 1 67 994
+           V 78
+           A 23 23 0 0 1 90 55 Z"/>
+
+      <clipPath id="disk-clip">
+        <use href="#disk-outer"/>
+      </clipPath>
+    </defs>
+
+    <!-- A. 케이스 본체 외곽 양각 베벨 + 내부 매트 플라스틱 표면 -->
+    <g filter="url(#disk-shadow)">
+      <g clip-path="url(#disk-clip)">
+        <rect x="60" y="48" width="960" height="984" fill="#1f2229"/>
+        <g filter="url(#bevel-soft)">
+          <polygon points="50,40 965,40 940,72 82,72 82,1012 50,1036" fill="#585d6b"/>
+          <polygon points="946,44 1026,44 1026,124 942,58" fill="#3b3f4a"/>
+        </g>
+        <use href="#disk-inner" fill="url(#case-body)"/>
+      </g>
+      <use href="#disk-outer" fill="none" stroke="#111319" stroke-width="2.5" stroke-linejoin="round"/>
+      <use href="#disk-inner" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" stroke-linejoin="round"/>
+    </g>
+
+    <!-- B. 왼쪽 위 삽입 방향 화살표 (기준 음각 패스) -->
+    <path
+      d="M 106 96 L 126 134 H 114 V 172 H 98 V 134 H 86 Z"
+      fill="#252831"
+      filter="url(#true-deboss)"
+    />
+
+    <!-- C. 하단 좌우 쓰기 방지 구멍 (깊은 음각 챔퍼 틀 + 관통 홀) -->
+    <g>
+      <rect x="88" y="962" width="42" height="42" rx="7" fill="#242730" filter="url(#true-deboss)"/>
+      <rect x="93" y="967" width="32" height="32" rx="4" fill="#090a0e"/>
+      <rect x="93" y="967" width="32" height="32" rx="4" fill="none" stroke="#040507" stroke-width="1.5"/>
+    </g>
+    <g>
+      <rect x="950" y="962" width="42" height="42" rx="7" fill="#242730" filter="url(#true-deboss)"/>
+      <rect x="955" y="967" width="32" height="32" rx="4" fill="#090a0e"/>
+      <rect x="955" y="967" width="32" height="32" rx="4" fill="none" stroke="#040507" stroke-width="1.5"/>
+    </g>
+  </svg>
+
+  <!-- 2. 상단 셔터 슬라이드 오목 트랙 (음각) -->
+  <div class="shutter-recess"></div>
+
+  <!-- 3. 브러시드 메탈 셔터 (양각) + 라벨 스티커 (양각) + 셔터 창 (음각) -->
+  <div class="shutter">
+    <div class="label">
+      <h1 id="label-title">SLIPDISK.EXE<small>- 1-1 미끄러지기</small></h1>
+      <div class="label-nav">
+        <button type="button" id="btn-prev" title="이전 레벨 ([)">◀</button>
+        <select id="level-select" aria-label="레벨 선택"></select>
+        <button type="button" id="btn-next-lv" title="다음 레벨 (])">▶</button>
+      </div>
+    </div>
+    <div class="shutter-window">
+      <div class="shutter-hud" id="hud">
+        <div class="hud-row file"><span>파일</span><b id="hud-file">0</b></div>
+        <div class="hud-row virus"><span>바이러스</span><b id="hud-virus">0</b></div>
+        <div class="hud-row vaccine"><span>백신</span><b id="hud-vaccine">-</b></div>
+        <div class="hud-row best"><span>최단/기록</span><b id="hud-best">-/-</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 가운데 인게임 창 (3단 음각 챔퍼 몰딩 + 자기 원판 + 미로 보드 + 하단 음각 입력바 UI) -->
+  <div class="window-frame">
+    <div class="window">
+      <div class="disc">
+        <svg viewBox="0 0 820 820" aria-hidden="true">
+          <defs>
+            <radialGradient id="spindle-grad" cx="35%" cy="30%" r="70%">
+              <stop offset="0" stop-color="#2c2f38"/>
+              <stop offset="0.6" stop-color="#1b1d23"/>
+              <stop offset="1" stop-color="#121318"/>
+            </radialGradient>
+          </defs>
+
+          <!-- 음각 트랙 골 (#0d0e13) -->
+          <g fill="none" stroke="#0d0e13" stroke-width="2.4" stroke-linecap="round" opacity="0.92">
+            <circle cx="410" cy="410" r="112" stroke-dasharray="170 80 230 110"/>
+            <circle cx="410" cy="410" r="145" stroke-dasharray="260 100 180 130"/>
+            <circle cx="410" cy="410" r="178" stroke-dasharray="150 120 310 85 170 100"/>
+            <circle cx="410" cy="410" r="211" stroke-dasharray="380 110 240 140"/>
+            <circle cx="410" cy="410" r="244" stroke-dasharray="200 130 350 100 260 120"/>
+            <circle cx="410" cy="410" r="277" stroke-dasharray="470 120 290 150"/>
+            <circle cx="410" cy="410" r="310" stroke-dasharray="250 140 400 110 320 130"/>
+            <circle cx="410" cy="410" r="343" stroke-dasharray="550 130 350 160"/>
+            <circle cx="410" cy="410" r="376" stroke-dasharray="310 150 480 120 370 140"/>
+          </g>
+
+          <!-- 양각 트랙 능선 스페큘러 하이라이트 호 (#3e414d) -->
+          <g fill="none" stroke="#3e414d" stroke-width="1.6" stroke-linecap="round" opacity="0.82">
+            <circle cx="410" cy="410" r="114.2" stroke-dasharray="130 120 190 150"/>
+            <circle cx="410" cy="410" r="147.2" stroke-dasharray="220 140 140 170"/>
+            <circle cx="410" cy="410" r="180.2" stroke-dasharray="120 150 260 130 130 140"/>
+            <circle cx="410" cy="410" r="213.2" stroke-dasharray="330 160 190 180"/>
+            <circle cx="410" cy="410" r="246.2" stroke-dasharray="160 170 290 150 220 160"/>
+            <circle cx="410" cy="410" r="279.2" stroke-dasharray="410 170 250 190"/>
+            <circle cx="410" cy="410" r="312.2" stroke-dasharray="210 180 350 160 270 170"/>
+            <circle cx="410" cy="410" r="345.2" stroke-dasharray="480 190 300 210"/>
+            <circle cx="410" cy="410" r="378.2" stroke-dasharray="260 200 410 180 320 190"/>
+          </g>
+
+          <!-- 원판 중앙 스핀들 허브 (음각 홈 + 양각 금속 링) -->
+          <circle cx="410" cy="410" r="84" fill="#0e0f14"/>
+          <circle cx="410" cy="410" r="78" fill="url(#spindle-grad)" stroke="#383b46" stroke-width="2"/>
+          <circle cx="410" cy="410" r="64" fill="#14151b" filter="url(#true-deboss)"/>
+        </svg>
+      </div>
+
+      <!-- 인게임 상단바 (.top-dock): 하단 .input-dock과 대칭되는 플라스틱 바디 (외곽 바의 2배 두께 = 28px) -->
+      <section class="top-dock" aria-hidden="true"></section>
+
+      <canvas id="board" width="832" height="466"></canvas>
+
+      <div class="play-overlay" id="overlay">
+        <h2 id="ov-title"></h2>
+        <p id="ov-sub"></p>
+        <div class="ov-actions">
+          <button type="button" id="ov-retry">다시 시도 (R)</button>
+          <button type="button" class="primary" id="ov-next">다음 레벨 (Enter)</button>
+        </div>
+      </div>
+
+      <!-- 인게임 하단 입력바:
+           입력된 방향키와 다음 입력 위치(_), 오른쪽 끝 RUN 버튼 모두
+           svg.disk-svg > path와 동일한 플라스틱 음각 각인(#true-deboss)으로 표현 -->
+      <section class="input-dock" aria-label="이동 명령 입력바">
+        <div class="queue-well" id="queue-well" aria-label="입력된 방향 현황" title="클릭하면 마지막 입력을 지웁니다 (Backspace)"></div>
+
+        <button type="button" class="btn-upload" id="btn-upload" title="입력한 명령 올리기 (Enter)">
+          <svg viewBox="0 0 104 44" aria-hidden="true">
+            <g fill="#20232b" filter="url(#true-deboss)">
+              <!-- RUN 각인 텍스트 -->
+              <text x="4" y="30" font-family="Consolas, 'Cascadia Mono', monospace" font-weight="800" font-size="25" letter-spacing="1.5">RUN</text>
+              <!-- 오른쪽 올리기 화살표 각인 (svg.disk-svg > path 스타일) -->
+              <path d="M 83 8 L 96 23 H 88 V 36 H 78 V 23 H 70 Z"/>
+            </g>
+          </svg>
+        </button>
+      </section>
+
+      <div class="window-vignette"></div>
+    </div>
+  </div>
+</main>
+
+<!-- 순서 유지: 레벨 데이터 → 규칙 → 그리기 → 게임 진행 -->
+<script src="js/levels.js"></script>
+<script src="js/rules.js"></script>
+<script src="js/render.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
