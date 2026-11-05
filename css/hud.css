@@ -1,0 +1,54 @@
+/* 캔버스 밖 인게임 UI: 셔터 창 HUD, 상단바. 라벨 레벨 선택 목록은 IA에 따라 없앴다 */
+
+.shutter-hud {
+  position: absolute;
+  inset: 0;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font: 700 13px/1.3 "Malgun Gothic", var(--mono), sans-serif;
+  color: #8b93a6;
+}
+.shutter-hud .hud-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+  padding-bottom: 4px;
+}
+.shutter-hud .hud-row b {
+  font-family: var(--mono);
+  font-size: 16px;
+  color: #e6e9f2;
+}
+.shutter-hud .hud-row.file b { color: #aeb4be; }
+.shutter-hud .hud-row.virus b { color: #d6336c; }
+.shutter-hud .hud-row.vaccine b { color: #2fbf71; }
+.shutter-hud .hud-row.best b { color: #ffa53d; }
+/* 메뉴 화면처럼 줄이 적을 때는 위에서부터 붙여 쓴다 */
+.shutter-hud.few {
+  justify-content: flex-start;
+  gap: 14px;
+}
+
+/* =====================================================================
+   인게임 상단바 UI (.top-dock): canvas#board 위에 .window 상단에 밀착 (외곽 벽 테두리 14px의 2배 두께 = 28px).
+   하단 입력바는 css/input-bar.css(입력바 정본 사본)에 있다
+   ===================================================================== */
+.top-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 28px;
+  border-radius: 42px 42px 0 0;
+  /* 디스크 케이스 및 .input-dock과 동일한 매트 플라스틱 바디 */
+  background: linear-gradient(180deg, #373b44 0%, #30343c 55%, #2a2d35 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, .2),
+    inset 0 -3px 0 #1b1e24,
+    0 2.5px 0 #0e1015,
+    0 8px 18px rgba(0, 0, 0, .75);
+  z-index: 5;
+}

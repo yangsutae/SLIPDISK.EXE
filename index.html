@@ -1,14 +1,19 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SLIPDISK.EXE — In-Game Input Bar UI</title>
+<title>SLIPDISK.EXE — Pixel Prototype</title>
 <link rel="stylesheet" href="css/case.css">
-<link rel="stylesheet" href="css/game.css">
+<link rel="stylesheet" href="css/hud.css">
+<link rel="stylesheet" href="css/input-bar.css">
+<link rel="stylesheet" href="css/screens.css">
 </head>
 <body>
-<main class="stage" aria-label="SLIPDISK.EXE 플로피 디스크 무대 및 음각 입력바 UI">
+<!-- 무대(1080x1080): 디스크 케이스, 셔터 라벨·HUD, 가운데 창, 하단 입력바.
+     가운데 창 안에는 캔버스 두 장을 겹친다. canvas#board는 게임 화면, 그 위의 canvas#screen은 메뉴 화면과 결과·일시정지 패널이다.
+     게임 안 글자는 모두 영문이다. 마크업은 디자인/시안/메뉴화면_01/index.html에서 시안 조작판을 뺀 것이다. -->
+<main class="stage" aria-label="SLIPDISK.EXE">
   <!-- 1. 디스크 케이스 본체 및 진짜 SVG 필터 기반 음각/양각 디테일 -->
   <svg class="disk-svg" viewBox="0 0 1080 1080" aria-hidden="true">
     <defs>
@@ -131,20 +136,14 @@
   <!-- 3. 브러시드 메탈 셔터 (양각) + 라벨 스티커 (양각) + 셔터 창 (음각) -->
   <div class="shutter">
     <div class="label">
-      <h1 id="label-title">SLIPDISK.EXE<small>- 1-1 미끄러지기</small></h1>
-      <div class="label-nav">
-        <button type="button" id="btn-prev" title="이전 레벨 ([)">◀</button>
-        <select id="level-select" aria-label="레벨 선택"></select>
-        <button type="button" id="btn-next-lv" title="다음 레벨 (])">▶</button>
-      </div>
+      <h1 id="label-title">SLIPDISK.EXE</h1>
+      <!-- 클리어 체크 도장: 셔터는 창 밖이라 픽셀이 아닌 매끈한 벡터로 그린다 -->
+      <svg id="label-stamp" class="label-stamp" viewBox="0 0 55 40" aria-hidden="true">
+        <path d="M 8 21 L 20 32 L 47 7" fill="none" stroke="#ffa53d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
     <div class="shutter-window">
-      <div class="shutter-hud" id="hud">
-        <div class="hud-row file"><span>파일</span><b id="hud-file">0</b></div>
-        <div class="hud-row virus"><span>바이러스</span><b id="hud-virus">0</b></div>
-        <div class="hud-row vaccine"><span>백신</span><b id="hud-vaccine">-</b></div>
-        <div class="hud-row best"><span>최단/기록</span><b id="hud-best">-/-</b></div>
-      </div>
+      <div class="shutter-hud" id="hud"></div>
     </div>
   </div>
 
@@ -197,33 +196,39 @@
       <!-- 인게임 상단바 (.top-dock): 하단 .input-dock과 대칭되는 플라스틱 바디 (외곽 바의 2배 두께 = 28px) -->
       <section class="top-dock" aria-hidden="true"></section>
 
-      <canvas id="board" width="832" height="466"></canvas>
+      <!-- 게임 화면 (832x466). 칸당 16x16 아트 픽셀을 정수배로 그린다. js/play/board.js -->
+      <canvas class="board" id="board" width="832" height="466"></canvas>
+      <!-- 메뉴 화면 (832x466 자리). 아트 픽셀 416x233을 2배로 키워 보인다. js/ui/ -->
+      <canvas class="board screen" id="screen" width="416" height="233"></canvas>
 
-      <div class="play-overlay" id="overlay">
-        <h2 id="ov-title"></h2>
-        <p id="ov-sub"></p>
-        <div class="ov-actions">
-          <button type="button" id="ov-retry">다시 시도 (R)</button>
-          <button type="button" class="primary" id="ov-next">다음 레벨 (Enter)</button>
+      <!-- 인게임 하단 입력바: 정본 디자인/에셋/입력바/의 마크업. 입력 홈(방향 줄 + ⌫ 키)과 ENTER 홈.
+           키 역할은 js/app.js와 각 화면의 onKey가 정한다(README 조작 절) -->
+      <section class="input-dock" aria-label="Move input bar">
+        <div class="queue-well">
+          <div class="queue" id="queue" aria-label="Queued moves"></div>
+          <!-- 플레이에서는 마지막 입력 하나 지우기, 메뉴에서는 뒤로 (Esc와 같음) -->
+          <button type="button" class="key key-back" id="btn-back" aria-label="Backspace" title="BACKSPACE · UNDO / BACK IN MENUS">
+            <svg viewBox="0 0 46 46" aria-hidden="true">
+              <!-- ⌫ 문양: 왼쪽을 가리키는 꼬리표에서 X를 뺀 블록 모양 -->
+              <path fill="#20232b" fill-rule="evenodd" filter="url(#true-deboss)"
+                d="M 4 23 L 16 9 H 42 V 37 H 16 Z
+                   M 25 15.5 L 29 19.5 L 33 15.5 L 36.5 19 L 32.5 23 L 36.5 27
+                   L 33 30.5 L 29 26.5 L 25 30.5 L 21.5 27 L 25.5 23 L 21.5 19 Z"/>
+            </svg>
+          </button>
         </div>
-      </div>
-
-      <!-- 인게임 하단 입력바:
-           입력된 방향키와 다음 입력 위치(_), 오른쪽 끝 RUN 버튼 모두
-           svg.disk-svg > path와 동일한 플라스틱 음각 각인(#true-deboss)으로 표현 -->
-      <section class="input-dock" aria-label="이동 명령 입력바">
-        <div class="queue-well" id="queue-well" aria-label="입력된 방향 현황" title="클릭하면 마지막 입력을 지웁니다 (Backspace)"></div>
-
-        <button type="button" class="btn-upload" id="btn-upload" title="입력한 명령 올리기 (Enter)">
-          <svg viewBox="0 0 104 44" aria-hidden="true">
-            <g fill="#20232b" filter="url(#true-deboss)">
-              <!-- RUN 각인 텍스트 -->
-              <text x="4" y="30" font-family="Consolas, 'Cascadia Mono', monospace" font-weight="800" font-size="25" letter-spacing="1.5">RUN</text>
-              <!-- 오른쪽 올리기 화살표 각인 (svg.disk-svg > path 스타일) -->
-              <path d="M 83 8 L 96 23 H 88 V 36 H 78 V 23 H 70 Z"/>
-            </g>
-          </svg>
-        </button>
+        <div class="key-well">
+          <!-- 플레이에서는 실행, 메뉴에서는 선택 -->
+          <button type="button" class="key key-enter" id="btn-enter" aria-label="Enter" title="ENTER · RUN / SELECT IN MENUS">
+            <svg viewBox="0 0 106 44" aria-hidden="true">
+              <g fill="#20232b" filter="url(#true-deboss)">
+                <text x="2" y="30" font-family="Consolas, 'Cascadia Mono', monospace" font-weight="800" font-size="22" letter-spacing="1">ENTER</text>
+                <!-- ↵ 문양: stamped-arrow와 같은 굵기의 꺾인 블록 화살표 -->
+                <path d="M 98 11 H 104 V 28 H 89 V 34 L 79 25 L 89 16 V 22 H 98 Z"/>
+              </g>
+            </svg>
+          </button>
+        </div>
       </section>
 
       <div class="window-vignette"></div>
@@ -231,10 +236,27 @@
   </div>
 </main>
 
-<!-- 순서 유지: 레벨 데이터 → 규칙 → 그리기 → 게임 진행 -->
-<script src="js/levels.js"></script>
-<script src="js/rules.js"></script>
-<script src="js/render.js"></script>
-<script src="js/game.js"></script>
+<!-- 순서 유지: 레벨 목차 → 규칙·레벨 파일 불러오기·목록·저장 → 그림 → 게임 진행·게임 화면 → 캔버스 밖 요소·메뉴 틀 → 화면들 → 시작.
+     레벨 파일(data/levels/*.js)은 여기 적지 않는다. app.js가 목차를 보고 불러온다 -->
+<script src="data/stages.js"></script>
+<script src="js/core/rules.js"></script>
+<script src="js/core/level-files.js"></script>
+<script src="js/core/catalog.js"></script>
+<script src="js/core/progress.js"></script>
+<script src="js/gfx/pixel.js"></script>
+<script src="js/gfx/sprites.js"></script>
+<script src="js/play/session.js"></script>
+<script src="js/play/board.js"></script>
+<script src="js/ui/shell.js"></script>
+<script src="js/ui/menu.js"></script>
+<script src="js/ui/screens/boot.js"></script>
+<script src="js/ui/screens/title.js"></script>
+<script src="js/ui/screens/select.js"></script>
+<script src="js/ui/screens/play.js"></script>
+<script src="js/ui/screens/result.js"></script>
+<script src="js/ui/screens/pause.js"></script>
+<script src="js/ui/screens/settings.js"></script>
+<script src="js/ui/screens/allclear.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

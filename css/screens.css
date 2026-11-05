@@ -1,0 +1,44 @@
+/* 가운데 창 안 픽셀 캔버스 두 장, 라벨 도장, 영문 글자용 글꼴 */
+
+/* =====================================================================
+   1. 픽셀 캔버스: 게임 화면 #board(832×466)와 그 위의 메뉴 화면 #screen(아트 픽셀 416×233을 2배).
+      무대 전체가 창 크기에 맞춰 줄거나 커지므로 pixelated로 픽셀이 흐려지지 않게 한다.
+   ===================================================================== */
+.board {
+  position: absolute;
+  left: 0;
+  top: 28px;
+  width: 832px;
+  height: 466px;
+  z-index: 2;
+  display: block;
+  image-rendering: pixelated;
+}
+.board.screen { z-index: 3; }
+/* 휴대폰 스와이프 입력(js/app.js)을 브라우저의 화면 끌기·확대가 가로채지 않게 */
+.stage { touch-action: none; }
+
+/* =====================================================================
+   2. 캔버스 밖 요소의 영문 글자: 라벨 부제와 HUD를 고정폭 글꼴로
+   ===================================================================== */
+.label h1 small {
+  font-family: var(--mono);
+  font-size: 20px;
+  letter-spacing: 0;
+}
+.shutter-hud {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* 클리어 체크 도장 (셔터는 창 밖이라 픽셀이 아닌 벡터) */
+.label-stamp {
+  position: absolute;
+  right: 16px;
+  top: 70px;
+  width: 55px;
+  height: 40px;
+  overflow: visible;
+  display: none;
+}
+.label-stamp.show { display: block; }

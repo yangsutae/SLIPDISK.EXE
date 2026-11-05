@@ -1,0 +1,139 @@
+/* SLIPDISK.EXE 입력바 정본 (입력바 시안 01의 A안)
+   가운데 창(.window, 폭 832px) 하단에 붙는 입력바. 오목 홈(음각) 안에 솟은 키(양각) ⌫·ENTER를 두고
+   키 윗면 글자·문양, 방향 화살표, 다음 입력 자리는 #true-deboss 음각 각인으로 새긴다.
+   #true-deboss 필터와 #stamped-arrow 경로는 같은 문서의 svg defs에 있어야 한다. */
+
+.input-dock,
+.input-dock * {
+  box-sizing: border-box;
+}
+
+/* 몸체: 디스크 케이스와 같은 매트 플라스틱, 창 하단에 빈틈없이 붙는다 */
+.input-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 98px;
+  border-radius: 0 0 42px 42px;
+  padding: 13px 20px 15px;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  background: linear-gradient(180deg, #373b44 0%, #30343c 55%, #2a2d35 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, .2),
+    inset 0 -3px 0 #1b1e24,
+    0 -2.5px 0 #0e1015,
+    0 -12px 26px rgba(0, 0, 0, .82);
+  z-index: 5;
+}
+
+/* 오목 홈(음각): 입력 홈(.queue-well)과 ENTER 홈(.key-well)은 셔터 트랙 톤의 같은 오목 플라스틱 홈.
+   광원은 왼쪽 위라 안쪽 위·왼쪽에 그늘, 바깥 아래·오른쪽에 밝은 턱이 생긴다 */
+.queue-well,
+.key-well {
+  height: 100%;
+  border-radius: 18px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(180deg, #2b2e37 0%, #2f333d 100%);
+  box-shadow:
+    inset 4px 5px 9px rgba(0, 0, 0, .65),
+    inset 2px 2px 2px rgba(0, 0, 0, .5),
+    -1.5px -1.5px 0 #1b1d24,
+    1.5px 2px 0 #4d525f,
+    0 2px 0 #484d59;
+}
+/* 입력 홈: 남은 폭을 모두 쓰고 오른쪽 끝에 ⌫ 키가 앉는다 */
+.queue-well {
+  flex: 1;
+  min-width: 0;
+  padding: 0 6px 0 0;
+}
+.key-well {
+  flex-shrink: 0;
+}
+
+/* 방향 줄: 넘치면 가로로 밀리고 마지막 입력이 보이게 오른쪽 끝으로 붙인다 */
+.queue {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 18px;
+  border-radius: 18px 0 0 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.queue::-webkit-scrollbar {
+  display: none;
+}
+
+/* 음각 방향 화살표와 다음 입력 자리(_) */
+.deboss-item {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+.deboss-cursor {
+  animation: cursor-pulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes cursor-pulse {
+  from { opacity: 1; }
+  to { opacity: .38; }
+}
+/* 실행 중(S3b): 지나간 입력은 흐리게, 지금 입력은 앰버. 다음 입력 자리는 그리지 않는다 */
+.deboss-item.done { opacity: .32; }
+.deboss-item.cur use { fill: #ffa53d; }
+
+/* 솟은 키(양각) ⌫·ENTER: 홈 바닥에서 6px 안쪽에 앉아 홈 테두리 밖으로 나오지 않는다.
+   윗면은 몸체와 같은 매트 플라스틱, 위·왼쪽 모서리가 빛을 받고 그림자는 홈 바닥의 오른쪽 아래로 떨어진다 */
+.key {
+  flex-shrink: 0;
+  height: 58px;
+  border: 0;
+  border-radius: 13px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  background: linear-gradient(180deg, #41454f 0%, #383c45 55%, #31343c 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, .22),
+    inset 1.5px 0 0 rgba(255, 255, 255, .07),
+    inset 0 -3px 0 #23262d,
+    0 0 0 1px #14161b,
+    2px 4px 7px rgba(0, 0, 0, .72);
+  transition: transform .06s ease, box-shadow .06s ease, filter .12s ease;
+}
+.key:hover {
+  filter: brightness(1.08);
+}
+/* 눌림: 2px 내려앉고 그림자가 짧아진다. 키보드로 누를 때는 스크립트가 .pressed를 0.11초 붙인다 */
+.key:active,
+.key.pressed {
+  transform: translateY(2px);
+  background: linear-gradient(180deg, #3a3e47 0%, #32353d 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .14),
+    inset 0 -1.5px 0 #23262d,
+    0 0 0 1px #14161b,
+    1px 1px 2px rgba(0, 0, 0, .7);
+}
+.key svg {
+  height: 44px;
+  overflow: visible;
+}
+.key-back { width: 74px; }
+.key-back svg { width: 46px; height: 46px; }
+.key-enter { width: 128px; }
+.key-enter svg { width: 106px; }
