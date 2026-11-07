@@ -15,7 +15,6 @@ function settingsShell() {
     Shell.hud([]);
   }
   Shell.queue();
-  Shell.stamp(false);
   return settingsFrom === 'S5' ? 'over' : 'full';
 }
 

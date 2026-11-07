@@ -8,7 +8,6 @@ SCREENS.S3 = () => {
   const i = Play.idx;
   const lv = Play.level;
   Shell.label(`${lv.id} ${lv.name}`);
-  Shell.stamp(Play.state.status === 'clear');
 
   const sync = () => {
     Shell.playHud(i, Play.state);
@@ -16,9 +15,6 @@ SCREENS.S3 = () => {
   };
   Play.bind({
     change: sync,
-    event: ev => {
-      if (ev.type === 'clear') Shell.stamp(true);
-    },
     finish: result => go('S4', result),
   });
   sync();

@@ -1,5 +1,5 @@
-// S7 전체 클리어: 마지막 레벨을 클리어한 결과에서 CONTINUE를 고르면 한 번 나온다. 끝나면 S2.
-// 라벨에 - ALL CLEAR와 체크 도장, HUD는 스테이지 선택과 같다.
+// S7 전체 클리어: 모든 레벨을 처음 다 깬 결과에서 CONTINUE를 고르면 한 번 나온다. 끝나면 S2.
+// 라벨에 - ALL CLEAR, HUD는 스테이지 선택과 같다.
 
 SCREENS.S7 = () => {
   const N = CATALOG.levels.length;
@@ -7,7 +7,6 @@ SCREENS.S7 = () => {
   Shell.label('ALL CLEAR');
   Shell.menuHud();
   Shell.queue();
-  Shell.stamp(true);
   const top = FLOOR.y + Math.floor((FLOOR.h - 121) / 2);
   const STATS = [
     [`${Progress.countClear()}/${N}`, 'CLEARED', COL.text],

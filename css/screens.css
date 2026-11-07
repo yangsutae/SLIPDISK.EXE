@@ -30,15 +30,3 @@
   font-family: var(--mono);
   font-size: 12px;
 }
-
-/* 클리어 체크 도장 (셔터는 창 밖이라 픽셀이 아닌 벡터) */
-.label-stamp {
-  position: absolute;
-  right: 16px;
-  top: 70px;
-  width: 55px;
-  height: 40px;
-  overflow: visible;
-  display: none;
-}
-.label-stamp.show { display: block; }

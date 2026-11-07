@@ -190,9 +190,9 @@ const LOCK = [ // 잠긴 레벨
 ];
 const LOCK_COLORS = { L: '#5a606c', h: '#1c1e24' };
 
-// ---------- 메뉴 커서 모니터 (모니터 캐릭터 정본 A안: 정면 박스, 거치대 없음, 19×15) ----------
-// 정본: 디자인/에셋/모니터_캐릭터/build.mjs. 게임 화면의 컴퓨터는 아직 예전 그림이다(play/board.js).
-// 표정은 기본 UwU와 실패 X( 둘뿐이다. 얼굴은 누른 방향으로 1칸 움직인다.
+// ---------- 모니터 캐릭터 (정본 A안: 정면 박스, 거치대 없음, 19×15) ----------
+// 정본: 디자인/에셋/모니터_캐릭터/build.mjs와 README의 그리는 규칙. 게임 화면의 컴퓨터(play/board.js)와 메뉴 커서(ui/menu.js)가 함께 쓴다.
+// 표정은 기본 UwU와 실패 X( 둘뿐이다. 얼굴은 마지막으로 이동(메뉴는 누른) 방향으로 1칸 움직인다.
 
 const MON_COLORS = {
   K: '#0c0d10', B: '#d8cfb8', L: '#efe8d6', S: '#b5ac96',
@@ -209,13 +209,17 @@ const FACE_GLYPH = {
 const faceRows = text => [0, 1, 2, 3, 4].map(y => [...text].map(ch => FACE_GLYPH[ch][y]).join('.'));
 
 const monitors = new Map();
-// o: face 'UwU'|'X(', color 얼굴 색 글자, dx·dy 얼굴 치우침, ring 화면 테두리 색 글자, squash 'h'|'v' 충돌 프레임
-function monitor({ face = 'UwU', color = 'A', dx = 0, dy = 0, ring = '', squash = '' } = {}) {
-  const key = [face, color, dx, dy, ring, squash].join('|');
-  if (monitors.has(key)) return monitors.get(key);
+// o: face 'UwU'|'X(', color 얼굴 색 글자, dx·dy 얼굴 치우침, ring 화면 테두리 색 글자('G' 백신, 'R' 실패),
+//    squash 'h'|'v' 충돌 프레임, save 저장 막대 비율(0~1), leds 켜진 램프 수(백신 남은 횟수)
+// 돌려주는 값 { rows, W, H }. 같은 조합은 한 번만 만든다
+function monitor({ face = 'UwU', color = 'A', dx = 0, dy = 0, ring = '', squash = '', save = 0, leds = 0 } = {}) {
   let ws = 15, hs = 9;
   if (squash === 'h') { ws = 13; hs = 10; }
   if (squash === 'v') { ws = 17; hs = 7; }
+  const bar = ws - 8; // 저장 막대 칸 수
+  const filled = Math.round(bar * clamp(save, 0, 1));
+  const key = [face, color, dx, dy, ring, squash, filled, leds].join('|');
+  if (monitors.has(key)) return monitors.get(key);
   const W = ws + 4;
   const H = hs + 6;
   const g = Array.from({ length: H }, () => Array(W).fill('.'));
@@ -238,9 +242,11 @@ function monitor({ face = 'UwU', color = 'A', dx = 0, dy = 0, ring = '', squash 
     g[y][x] = g[fy ? y + 1 : y - 1][x];
   }
   for (const [x, y] of [[1, 0], [2, 0], [0, 1]]) g[sy + y][sx + x] = 'g';
+  // 턱: 왼쪽 저장 막대(먹은 파일 비율만큼 앰버), 오른쪽 램프 4개(백신 남은 횟수만큼 초록)
   const cy = H - 3;
-  rect(sx, cy, ws - 8, 1, 't');
-  for (let i = 0; i < 4; i++) rect(sx + ws - 7 + i * 2, cy, 1, 1, 'o');
+  rect(sx, cy, bar, 1, 't');
+  rect(sx, cy, filled, 1, 'A');
+  for (let i = 0; i < 4; i++) rect(sx + ws - 7 + i * 2, cy, 1, 1, i < leds ? 'G' : 'o');
   const rows = faceRows(face);
   const fx = sx + clamp(Math.floor((ws - rows[0].length) / 2) + dx, 0, ws - rows[0].length);
   const fy = sy + clamp(Math.floor((hs - 5) / 2) + dy, 0, hs - 5);

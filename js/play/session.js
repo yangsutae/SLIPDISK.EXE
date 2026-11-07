@@ -16,9 +16,7 @@ const Play = {
   stepIdx: -1,     // 실행 중인 입력 번호
   slide: null,     // 지금 미끄러지는 이동 { dir, from, path, events, fired, start, duration, bumped }
   popups: [],      // 떠 있는 문양 { x, y, kind, dir, born }
-  faceDir: 'R',
-  eatFlashUntil: 0,
-  flashFace: ':D',
+  faceDir: null,    // 마지막으로 누르거나 이동한 방향. 컴퓨터 얼굴이 그쪽으로 1칸 치우친다. 레벨 처음에는 가운데
   timer: 0,
   hooks: {},
 
@@ -29,7 +27,7 @@ const Play = {
     this.hooks[name]?.(arg);
   },
 
-  // 레벨 처음 상태로. keepQueue면 입력은 남긴다(다시 시도, 실행 중단)
+  // 레벨 처음 상태로. keepQueue면 입력은 남긴다(클리어 후 다시 시도, 실행 시작·중단)
   load(idx, keepQueue = false) {
     clearTimeout(this.timer);
     this.idx = idx;
@@ -39,6 +37,7 @@ const Play = {
     this.stepIdx = -1;
     this.slide = null;
     this.popups = [];
+    this.faceDir = null;
     if (!keepQueue) this.queue = [];
     this.emit('change');
   },
@@ -100,6 +99,7 @@ const Play = {
 
   finish() {
     this.running = false;
+    if (this.state.status !== 'clear') this.queue = [];
     this.emit('change');
     this.emit('finish', {
       status: this.state.status,
@@ -138,19 +138,13 @@ const Play = {
     const pop = (kind, dir) => this.popups.push({ x: ev.x, y: ev.y, kind, dir, born: now });
     if (ev.type === 'file') {
       this.state.items.delete(k);
-      this.flashFace = ':D';
-      this.eatFlashUntil = now + 220;
       pop('save');
     } else if (ev.type === 'vaccine') {
       this.state.items.delete(k);
       this.state.super = SUPER_MOVES;
-      this.flashFace = 'B)';
-      this.eatFlashUntil = now + 260;
       pop('vaccine');
     } else if (ev.type === 'eat') {
       this.state.items.delete(k);
-      this.flashFace = ':D';
-      this.eatFlashUntil = now + 260;
       pop('shatter');
       pop('delete');
     } else if (ev.type === 'die') {

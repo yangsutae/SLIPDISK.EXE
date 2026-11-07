@@ -7,7 +7,6 @@ SCREENS.S5 = ({ sel = 0 } = {}) => {
   Shell.label(`${lv.id} ${lv.name}`);
   Shell.playHud(i, Play.state);
   Shell.queue();
-  Shell.stamp(false);
   const p = centeredPanel(190, 161);
   Menu.set({
     layer: 'over',

@@ -1,10 +1,9 @@
-// 캔버스 밖 요소: 셔터 라벨, 라벨 체크 도장, 셔터 창 HUD, 하단 입력바(방향 줄, ⌫ 키, ENTER 키. 정본 디자인/에셋/입력바/).
+// 캔버스 밖 요소: 셔터 라벨, 셔터 창 HUD, 하단 입력바(방향 줄, ⌫ 키, ENTER 키. 정본 디자인/에셋/입력바/).
 // 화면이 바뀌어도 그 자리에 두고 내용만 바꾼다(IA 캔버스 밖 요소 표). 창 밖 하드웨어라 픽셀로 그리지 않는다.
 
 const Shell = (() => {
   const $ = id => document.getElementById(id);
   const labelTitle = $('label-title');
-  const stampEl = $('label-stamp');
   const hudEl = $('hud');
   const queueEl = $('queue');
   const keys = { back: $('btn-back'), enter: $('btn-enter') };
@@ -36,9 +35,6 @@ const Shell = (() => {
 
     label(sub) {
       labelTitle.innerHTML = sub ? `SLIPDISK.EXE<small>- ${sub}</small>` : 'SLIPDISK.EXE';
-    },
-    stamp(on) {
-      stampEl.classList.toggle('show', on);
     },
     hud,
     // 스테이지 선택·전체 클리어: 클리어 수와 최단 달성 수

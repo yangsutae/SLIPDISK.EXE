@@ -5,7 +5,6 @@ SCREENS.S0 = () => {
   Shell.label();
   Shell.hud([]);
   Shell.queue();
-  Shell.stamp(false);
   // [뜨는 시각(ms), 글자]. null은 읽기 막대
   const LINES = [
     [900, 'READING DRIVE A: TRACK 00-79'],

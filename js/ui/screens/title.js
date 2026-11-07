@@ -5,7 +5,6 @@ SCREENS.S1 = ({ sel = 0 } = {}) => {
   Shell.label();
   Shell.hud([]);
   Shell.queue();
-  Shell.stamp(false);
   Menu.set({
     sel,
     items: column([

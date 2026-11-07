@@ -4,7 +4,7 @@
 // 픽셀 렌더 규칙
 // - 칸 하나를 16×16 아트 픽셀로 보고, 아트 픽셀 한 칸을 정수배(s) 화면 픽셀로 그린다. 한 화면 안에서는 s가 하나다.
 // - 크기 변형·회전·흐림을 쓰지 않는다. 움직임은 그림을 바꿔 끼우거나 아트 픽셀 단위로 옮기고, 상태는 색 묶음만 바꾼다.
-// - 화면에 글자를 쓰지 않는다. 사건은 문양(EMBLEMS)으로, 얼굴은 점으로 찍은 비트맵(FACES)으로 그린다.
+// - 화면에 글자를 쓰지 않는다. 사건은 문양(EMBLEMS)으로 알리고, 컴퓨터는 모니터 캐릭터 정본(monitor)의 점 글자 얼굴이다.
 
 const Board = (() => {
   const canvas = document.getElementById('board');
@@ -28,23 +28,6 @@ const Board = (() => {
     return cells;
   })();
 
-  // 컴퓨터 얼굴: 앰버 점으로 찍은 아스키 얼굴. 상황별 표정은 옆으로 누운 글자 그대로다.
-  // craftsman: 모니터 캐릭터 정본(A안, 표정 UwU·X(만)은 아직 옮기지 않았다. 운영/ToDo의 "모니터 캐릭터 에셋 반영"에서 바꾼다.
-  const FACES = {
-    'UwU': ['#.#.....#.#', '#.#.....#.#', '.#.......#.', '...#.#.#...', '....#.#....'],
-    ':O': ['..###', '#.#.#', '..#.#', '#.#.#', '..###'],
-    ':D': ['..##.', '#.#.#', '..#.#', '#.#.#', '..##.'],
-    'B)': ['##..#.', '#.#..#', '##...#', '#.#..#', '##..#.'],
-    'X(': ['#.#..#', '#.#.#.', '.#..#.', '#.#.#.', '#.#..#'],
-    'XD': ['#.#.##.', '#.#.#.#', '.#..#.#', '#.#.#.#', '#.#.##.'],
-  };
-  const FACE_COLORS = { '#': '#ffa53d' };
-
-  const MON = {
-    body: '#d8cfb8', light: '#efe8d6', shade: '#b5ac96', stand: '#9a917c',
-    screen: '#101113', track: '#2c2d32', amber: '#ffa53d', green: '#2fbf71', pipOff: '#1d4a32',
-  };
-
   function drawWall(x, y, w, h, s) {
     fill(ctx, x, y, w, h, '#555960');
     // 좌상단 밝은 경사면, 우하단 어두운 경사면 (두께 = 아트 픽셀 1칸)
@@ -64,111 +47,47 @@ const Board = (() => {
     drawBitmap(ctx, PILL, PILL_COLORS, gx + s, y + s, s);
   }
 
-  // 백신 효과 중 격리 테두리: 칸 둘레를 도는 점선(2칸 켜고 2칸 끔)
-  function drawAnts(gx, gy, s, t) {
-    const off = Math.floor(t / 110);
-    ctx.fillStyle = '#2fbf71';
-    for (let i = 0; i < 60; i++) {
-      if ((i + off) % 4 >= 2) continue;
-      const [x, y] = i < 15 ? [i, 0] : i < 30 ? [15, i - 15] : i < 45 ? [45 - i, 15] : [0, 60 - i];
-      ctx.fillRect(gx + x * s, gy + y * s, s, s);
-    }
+  // 17×17 바이러스 바깥의 모서리 네 개. 남은 횟수만큼 좌상·우상·우하·좌하 순으로 켠다.
+  function drawQuarantine(gx, gy, s, t, count) {
+    const corners = [[-2, -2, 1, 1], [16, -2, -1, 1], [16, 16, -1, -1], [-2, 16, 1, -1]];
+    corners.forEach(([x, y, dx, dy], i) => {
+      const on = i < count && (count > 1 || Math.floor(t / 400) % 2 === 0);
+      ctx.fillStyle = on ? '#2fbf71' : '#263d30';
+      for (let d = 0; d < 4; d++) {
+        ctx.fillRect(gx + (x + dx * d) * s, gy + y * s, s, s);
+        if (d) ctx.fillRect(gx + x * s, gy + (y + dy * d) * s, s, s);
+      }
+    });
   }
 
   function drawVirus(gx, gy, s, t, superCount) {
     const powered = superCount > 0;
-    // 효과가 1회 남으면 격리 테두리가 깜빡임
-    if (powered && (superCount > 1 || Math.floor(t / 140) % 2 === 0)) drawAnts(gx, gy, s, t);
     drawBitmap(ctx, VIRUS[Math.floor(t / 240) % 2], powered ? VIRUS_POWERED : VIRUS_COLORS, gx - s, gy - s, s);
+    if (powered) drawQuarantine(gx, gy, s, t, superCount);
   }
 
+  // 컴퓨터: 모니터 캐릭터 정본(gfx/sprites.js의 monitor). 그림 중심을 칸 중심에 맞추고, 칸(16)보다 넓은 본체(19)는 칸 밖으로 넘긴다.
+  // 남는 1칸은 오른쪽·아래로 둔다. 상태는 정본 README의 그리는 규칙을 따른다.
+  //   얼굴 UwU, 마지막 이동 방향으로 1칸 / 저장 막대는 먹은 파일 비율 / 백신 효과 중 초록 테두리와 램프(1회 남으면 테두리 깜빡임)
+  //   벽 충돌은 눌린 프레임(좌우 h, 상하 v) / 실패는 X(와 빨간 테두리가 0.5초마다 켜지고 꺼짐
   function drawComputer(gx, gy, s, t, p) {
     const { state, slide } = p;
-    const rect = (x, y, w, h, c) => fill(ctx, gx + x * s, gy + y * s, w * s, h * s, c);
-
-    // 벽에 부딪히면 눌린 그림으로 바꿔 끼운다 (크기 변형 대신 아트 픽셀 단위 프레임)
-    let W = 16, H = 13;
+    const [dx, dy] = DIRS[p.faceDir] || [0, 0];
+    const o = { dx, dy };
     if (slide && slide.bumped) {
       const k = (t - slide.start) / slide.duration;
-      if (k > 0.15 && k < 0.85) {
-        if (slide.dir === 'L' || slide.dir === 'R') { W = 14; H = 14; }
-        else { W = 18; H = 11; }
-      }
+      if (k > 0.15 && k < 0.85) o.squash = slide.dir === 'L' || slide.dir === 'R' ? 'h' : 'v';
     }
-    const L = (16 - W) / 2;
-    const T = 13 - H;
-
-    // 받침
-    rect(5, 13, 6, 1, OUTLINE);
-    rect(6, 13, 4, 1, MON.stand);
-    rect(3, 14, 10, 1, OUTLINE);
-    rect(4, 14, 8, 1, MON.shade);
-    rect(4, 15, 8, 1, OUTLINE);
-
-    // 베이지 브라운관 모니터 본체 (모서리 1픽셀 깎음)
-    rect(L + 1, T, W - 2, H, OUTLINE);
-    rect(L, T + 1, W, H - 2, OUTLINE);
-    rect(L + 1, T + 1, W - 2, H - 2, MON.body);
-    rect(L + 1, T + 1, W - 2, 1, MON.light);
-    rect(L + 1, T + 1, 1, H - 2, MON.light);
-    rect(L + W - 2, T + 2, 1, H - 3, MON.shade);
-    rect(L + 2, T + H - 2, W - 3, 1, MON.shade);
-
-    // 먹색 화면
-    const sx = L + 2, sy = T + 2, sw = W - 4, sh = H - 6;
-    rect(sx, sy, sw, sh, MON.screen);
-
-    // 실패: 화면 노이즈
+    if (state.totalFiles > 0) o.save = (state.totalFiles - remaining(state.items).files) / state.totalFiles;
     if (state.status === 'dead') {
-      const f = Math.floor(t / 70);
-      for (let y = 0; y < sh; y++) {
-        for (let x = 0; x < sw; x++) {
-          const h = Math.sin((x + 1) * 12.9898 + (y + 1) * 78.233 + f * 37.719) * 43758.5453;
-          const r = h - Math.floor(h);
-          if (r < 0.28) rect(sx + x, sy + y, 1, 1, r < 0.1 ? '#d6336c' : '#3a3d44');
-        }
-      }
+      const on = Math.floor(t / 500) % 2 === 0;
+      Object.assign(o, { face: 'X(', color: on ? 'R' : 'r', ring: on ? 'R' : '' });
+    } else if (state.super > 0) {
+      o.leds = state.super;
+      if (state.super > 1 || Math.floor(t / 400) % 2 === 0) o.ring = 'G';
     }
-
-    // 아스키 얼굴 결정 (기본은 UwU)
-    let face = 'UwU';
-    if (state.status === 'dead') face = 'X(';
-    else if (state.status === 'clear') face = 'XD';
-    else if (t < p.eatFlashUntil) face = p.flashFace;
-    else if (slide) face = ':O'; // 미끄러지는 중과 벽 충돌
-    else if (state.super > 0) face = 'B)';
-
-    const powered = state.super > 0;
-    const bmp = FACES[face];
-    const fw = bmp[0].length, fh = bmp.length;
-    const [dx, dy] = DIRS[p.faceDir] || [0, 0];
-    // 마지막 이동 방향으로 1픽셀 치우치되 화면 밖으로 나가지 않는다. 효과 중에는 위 두 줄을 남은 횟수 칸에 내준다.
-    const fx = sx + clamp(Math.floor((sw - fw) / 2) + dx, 0, sw - fw);
-    const fy = sy + clamp(Math.floor((sh - fh) / 2) + dy, powered && sh - fh >= 2 ? 2 : 0, sh - fh);
-    drawBitmap(ctx, bmp, FACE_COLORS, gx + fx * s, gy + fy * s, s);
-
-    // 백신 효과 중: 화면 테두리 초록, 화면 위 오른쪽에 남은 횟수 초록 칸 4개 (1회 남으면 깜빡임)
-    // 칸은 테두리와 붙어 보이지 않게 위·오른쪽으로 한 칸씩 띄운다
-    if (powered) {
-      const on = state.super > 1 || Math.floor(t / 140) % 2 === 0;
-      for (let i = 0; i < SUPER_MOVES; i++) {
-        rect(sx + sw - 2 - (SUPER_MOVES - 1 - i) * 2, sy + 1, 1, 1, i < state.super && on ? MON.green : MON.pipOff);
-      }
-      if (on) {
-        rect(sx - 1, sy - 1, sw + 2, 1, MON.green);
-        rect(sx - 1, sy + sh, sw + 2, 1, MON.green);
-        rect(sx - 1, sy, 1, sh, MON.green);
-        rect(sx + sw, sy, 1, sh, MON.green);
-      }
-    }
-
-    // 파일 저장 막대 (화면 아래 턱)
-    if (state.totalFiles > 0) {
-      const bw = W - 6;
-      const done = Math.round(bw * (state.totalFiles - remaining(state.items).files) / state.totalFiles);
-      rect(L + 3, T + H - 3, bw, 1, MON.track);
-      if (done > 0) rect(L + 3, T + H - 3, done, 1, MON.amber);
-    }
+    const m = monitor(o);
+    drawBitmap(ctx, m.rows, MON_COLORS, gx + Math.floor((GRID - m.W) / 2) * s, gy + Math.floor((GRID - m.H) / 2) * s, s);
   }
 
   // 바이러스 삭제: 조각 8개가 사방으로 흩어져 사라진다 (컴퓨터로 흡수하지 않음)

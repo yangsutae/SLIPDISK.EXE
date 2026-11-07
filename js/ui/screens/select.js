@@ -2,9 +2,10 @@
 // 레벨·단계를 늘려도 이 파일은 고치지 않는다.
 //   탭  단계마다 하나(STAGE n). 한 줄에 다 들어가지 않으면 고른 탭을 따라 넘기고 양 끝에 ◀·▶를 띄운다.
 //       커서 모니터는 숨기고 고른 탭은 은색 테두리, 보고 있는 단계의 탭은 눌린 모양이다.
-//   칸  레벨 수에 따라 한 줄 칸 수(최대 3)와 칸 폭이 바뀌고 칸 묶음은 가운데에 놓인다.
-//       칸이 한 쪽(3줄)을 넘으면 쪽을 나누고 오른쪽 끝에 ↑·↓를 띄운다.
-//       칸마다 번호, 이름, 기록(BEST·PAR). 클리어는 앰버 체크, 최단 달성은 크림색 별, 잠긴 칸은 자물쇠.
+//   칸  크기가 같은 칸을 한 줄에 최대 5개 놓고 칸 묶음은 가운데에 놓인다. 한 쪽은 4줄(20칸)이고
+//       넘으면 쪽을 나누고 오른쪽 끝에 ↑·↓를 띄운다.
+//       칸에는 번호와 상태만 쓴다. 클리어는 앰버 체크, 최단 달성은 크림색 별, 잠긴 칸은 자물쇠.
+//       고른 칸의 번호, 이름, 기록(BEST·PAR)은 칸 묶음 아래 한 줄에 쓴다.
 // 조작: 탭에서 좌우는 단계 전환(바로 보임), 아래는 칸으로, 맨 오른쪽 탭에서 오른쪽은 BACK.
 //       칸에서 좌우는 레벨 순서대로(단계 끝에서는 옆 단계로 넘어감), 상하는 같은 칸 자리, 맨 윗줄에서 위는 탭.
 //       탭을 클릭하면 그 단계를 보이고, 보고 있는 탭을 고르면 칸으로 내려간다.
@@ -13,30 +14,32 @@ const SELECT_LAYOUT = {
   left: FLOOR.x + 8, right: FLOOR.x + FLOOR.w - 8, // 칸과 탭이 놓이는 폭 (15 ~ 401)
   tabY: 12, tabH: 15, tabGap: 4, arrowW: 8,
   headY: 34,
-  gridTop: 50, gridBottom: 205,
-  cellH: 40, gap: 6, maxCols: 3, maxCellW: 150,
+  gridTop: 50, gridBottom: 188, detailY: 195,
+  cellH: 30, gap: 6, maxCols: 5, maxCellW: 72,
 };
 
-// 스테이지 칸 내용. 커서 모니터는 칸 안 오른쪽 가운데에 선다
+// 스테이지 칸 내용: 왼쪽 위에 번호, 그 아래 상태 그림. 커서 모니터는 칸 안 오른쪽 가운데에 선다
 function stageCell(i) {
   return (it, st, dy) => {
-    const lv = CATALOG.levels[i];
     const open = Progress.isOpen(i);
-    const best = Progress.best(i);
     const on = st === 'sel' || st === 'press';
-    const main = !open ? COL.faint : on ? COL.bright : COL.text;
-    const sub = !open ? COL.faint : on ? COL.sub : COL.dim;
-    drawText(g, lv.id, it.x + 6, it.y + 5 + dy, main);
-    drawText(g, lv.name, it.x + 6, it.y + 17 + dy, !open ? COL.faint : on ? COL.bright : COL.item);
-    const par = lv.par ?? '?';
-    drawText(g, !open ? 'LOCKED' : best === null ? `PAR ${par}` : `BEST ${best} · PAR ${par}`, it.x + 6, it.y + 29 + dy, sub);
-    const rx = it.x + it.w - 4;
-    if (!open) drawBitmap(g, LOCK, LOCK_COLORS, rx - LOCK[0].length, it.y + 4);
-    else if (best !== null) {
-      drawBitmap(g, CHECK, EMBLEM_COLORS, rx - CHECK[0].length, it.y + 3);
-      if (Progress.isPar(i)) drawBitmap(g, STAR, STAR_COLORS, rx - CHECK[0].length - STAR[0].length - 1, it.y + 2);
+    drawText(g, CATALOG.levels[i].id, it.x + 6, it.y + 6 + dy, !open ? COL.faint : on ? COL.bright : COL.text);
+    const y = it.y + 17 + dy;
+    if (!open) drawBitmap(g, LOCK, LOCK_COLORS, it.x + 6, y);
+    else if (Progress.isClear(i)) {
+      drawBitmap(g, CHECK, EMBLEM_COLORS, it.x + 5, y - 1);
+      if (Progress.isPar(i)) drawBitmap(g, STAR, STAR_COLORS, it.x + 5 + CHECK[0].length + 1, y - 2);
     }
   };
+}
+
+// 고른 칸의 레벨 한 줄: 번호, 이름, 기록
+function stageDetail(i) {
+  const lv = CATALOG.levels[i];
+  const best = Progress.best(i);
+  const par = lv.par ?? '?';
+  const rec = !Progress.isOpen(i) ? 'LOCKED' : best === null ? `PAR ${par}` : `BEST ${best} · PAR ${par}`;
+  return `${lv.id} ${lv.name} · ${rec}`;
 }
 
 SCREENS.S2 = () => {
@@ -46,7 +49,6 @@ SCREENS.S2 = () => {
   Shell.label('STAGE SELECT');
   Shell.menuHud();
   Shell.queue();
-  Shell.stamp(false);
 
   const BACK = { act: 'back', kind: 'back', label: 'BACK', x: FLOOR.x + FLOOR.w - 48, y: Lay.tabY, w: 40, h: Lay.tabH };
 
@@ -191,6 +193,8 @@ SCREENS.S2 = () => {
         x -= 10;
       }
       fill(g, Lay.left, Lay.headY + 11, gridW, 1, COL.line);
+      const focus = Menu.scene.items[Menu.scene.sel];
+      if (focus?.kind === 'cell') drawTextCenter(g, stageDetail(gr.levels[focus.k]), CX, Lay.detailY, COL.sub);
       // 쪽 넘김 표시
       const ax = Lay.right + 2;
       if (page > 0) drawText(g, '↑', ax, Lay.gridTop, COL.dim);
@@ -205,7 +209,7 @@ SCREENS.S2 = () => {
         return moveTo({ kind: 'cell', k: firstOnPage() });
       }
       const i = Number(act);
-      if (!Progress.isOpen(i)) return Menu.refuse('CLEAR THE PREVIOUS LEVEL FIRST');
+      if (!Progress.isOpen(i)) return Menu.refuse(Progress.lockText(i));
       Progress.open(i);
       Play.load(i);
       go('S3');
